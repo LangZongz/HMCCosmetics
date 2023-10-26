@@ -2,7 +2,7 @@ name: HMCCosmetics Build
 on:
   push:
     branches:
-      - new/remapped
+      - remapped
 jobs:
   build:
     runs-on: ubuntu-latest
