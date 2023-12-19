@@ -89,11 +89,6 @@ public class CosmeticUser {
         return playerCosmetics.get(slot);
     }
 
-    @Deprecated
-    public Collection<Cosmetic> getCosmetic() {
-        return playerCosmetics.values();
-    }
-
     public ImmutableCollection<Cosmetic> getCosmetics() {
         return ImmutableList.copyOf(playerCosmetics.values());
     }
@@ -193,9 +188,27 @@ public class CosmeticUser {
     }
 
     public void updateCosmetic() {
+        bulkUpdateCosmetic();
+    }
+
+    private void bulkUpdateCosmetic() {
+        MessagesUtil.sendDebugMessages("bulkUpdateCosmetic - start");
+        HashMap<EquipmentSlot, ItemStack> items = new HashMap<>();
+
         for (Cosmetic cosmetic : getCosmetics()) {
+            if (cosmetic instanceof CosmeticArmorType armorType) {
+                if (getUserEmoteManager().isPlayingEmote() || isInWardrobe()) return;
+                if (!Settings.isCosmeticForceOffhandCosmeticShow()
+                        && armorType.getEquipSlot().equals(EquipmentSlot.OFF_HAND)
+                        && !getPlayer().getInventory().getItemInOffHand().getType().isAir()) continue;
+                items.put(InventoryUtils.getEquipmentSlot(armorType.getSlot()), armorType.getItem(this));
+                continue;
+            }
             updateCosmetic(cosmetic.getSlot());
         }
+        if (items.isEmpty()) return;
+        NMSHandlers.getHandler().equipmentSlotUpdate(getEntity().getEntityId(), items, PlayerUtils.getNearbyPlayers(getEntity().getLocation()));
+        MessagesUtil.sendDebugMessages("bulkUpdateCosmetic - end - " + items.size());
     }
 
     public ItemStack getUserCosmeticItem(CosmeticSlot slot) {
@@ -208,7 +221,10 @@ public class CosmeticUser {
             if (cosmetic instanceof CosmeticBackpackType || cosmetic instanceof CosmeticBalloonType) return new ItemStack(Material.AIR);
             return getPlayer().getInventory().getItem(InventoryUtils.getEquipmentSlot(cosmetic.getSlot()));
         }
-        if (cosmetic instanceof CosmeticArmorType || cosmetic instanceof CosmeticMainhandType || cosmetic instanceof CosmeticBackpackType) {
+        if (cosmetic instanceof CosmeticArmorType armorType) {
+            item = armorType.getItem(this, cosmetic.getItem());
+        }
+        if (cosmetic instanceof CosmeticBackpackType || cosmetic instanceof CosmeticMainhandType) {
             item = cosmetic.getItem();
         }
         if (cosmetic instanceof CosmeticBalloonType) {
@@ -319,6 +335,10 @@ public class CosmeticUser {
     }
 
     public void leaveWardrobe() {
+        leaveWardrobe(false);
+    }
+
+    public void leaveWardrobe(boolean disconnecting) {
         PlayerWardrobeLeaveEvent event = new PlayerWardrobeLeaveEvent(this);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
@@ -329,7 +349,7 @@ public class CosmeticUser {
 
         getWardrobeManager().setWardrobeStatus(UserWardrobeManager.WardrobeStatus.STOPPING);
 
-        if (WardrobeSettings.isEnabledTransition()) {
+        if (WardrobeSettings.isEnabledTransition() && !disconnecting) {
             MessagesUtil.sendTitle(
                     getPlayer(),
                     WardrobeSettings.getTransitionText(),

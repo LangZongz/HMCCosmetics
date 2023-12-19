@@ -25,6 +25,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -105,6 +106,8 @@ public class UserWardrobeManager {
             PacketManager.sendLookPacket(ARMORSTAND_ID, viewingLocation, viewer);
 
             // Player
+            user.getPlayer().teleport(viewingLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            user.getPlayer().setInvisible(true);
             PacketManager.gamemodeChangePacket(player, 3);
             PacketManager.sendCameraPacket(ARMORSTAND_ID, viewer);
 
@@ -213,6 +216,7 @@ public class UserWardrobeManager {
 
             // Player
             PacketManager.sendCameraPacket(player.getEntityId(), viewer);
+            user.getPlayer().setInvisible(false);
 
             // Armorstand
             PacketManager.sendEntityDestroyPacket(ARMORSTAND_ID, viewer); // Sucess
@@ -239,7 +243,7 @@ public class UserWardrobeManager {
                 //PacketManager.sendLeashPacket(VIEWER.getBalloonEntity().getPufferfishBalloonId(), player.getEntityId(), viewer);
             }
 
-            player.teleport(Objects.requireNonNullElseGet(exitLocation, () -> player.getWorld().getSpawnLocation()));
+            player.teleport(Objects.requireNonNullElseGet(exitLocation, () -> player.getWorld().getSpawnLocation()), PlayerTeleportEvent.TeleportCause.PLUGIN);
 
             if (WardrobeSettings.isEquipPumpkin()) {
                 NMSHandlers.getHandler().equipmentSlotUpdate(user.getPlayer().getEntityId(), EquipmentSlot.HEAD, player.getInventory().getHelmet(), viewer);
@@ -289,7 +293,7 @@ public class UserWardrobeManager {
                     PacketManager.equipmentSlotUpdate(NPC_ID, user, slot, viewer);
                 }
 
-                if (user.hasCosmeticInSlot(CosmeticSlot.BACKPACK)) {
+                if (user.hasCosmeticInSlot(CosmeticSlot.BACKPACK) && user.getUserBackpackManager() != null) {
                     PacketManager.sendTeleportPacket(user.getUserBackpackManager().getFirstArmorStandId(), location, false, viewer);
                     PacketManager.ridingMountPacket(NPC_ID, user.getUserBackpackManager().getFirstArmorStandId(), viewer);
                     user.getUserBackpackManager().getEntityManager().setRotation(nextyaw);
@@ -309,6 +313,8 @@ public class UserWardrobeManager {
 
                 if (WardrobeSettings.isEquipPumpkin()) {
                     NMSHandlers.getHandler().equipmentSlotUpdate(user.getPlayer().getEntityId(), EquipmentSlot.HEAD, new ItemStack(Material.CARVED_PUMPKIN), viewer);
+                } else {
+                    PacketManager.equipmentSlotUpdate(user.getPlayer(), true, viewer); // Optifine dumbassery
                 }
             }
         };
