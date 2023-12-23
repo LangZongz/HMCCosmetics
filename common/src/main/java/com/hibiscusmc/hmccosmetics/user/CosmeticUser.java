@@ -188,11 +188,7 @@ public class CosmeticUser {
     }
 
     public void updateCosmetic() {
-        bulkUpdateCosmetic();
-    }
-
-    private void bulkUpdateCosmetic() {
-        MessagesUtil.sendDebugMessages("bulkUpdateCosmetic - start");
+        MessagesUtil.sendDebugMessages("updateCosmetic (All) - start");
         HashMap<EquipmentSlot, ItemStack> items = new HashMap<>();
 
         for (Cosmetic cosmetic : getCosmetics()) {
@@ -208,7 +204,7 @@ public class CosmeticUser {
         }
         if (items.isEmpty()) return;
         NMSHandlers.getHandler().equipmentSlotUpdate(getEntity().getEntityId(), items, PlayerUtils.getNearbyPlayers(getEntity().getLocation()));
-        MessagesUtil.sendDebugMessages("bulkUpdateCosmetic - end - " + items.size());
+        MessagesUtil.sendDebugMessages("updateCosmetic (All) - end - " + items.size());
     }
 
     public ItemStack getUserCosmeticItem(CosmeticSlot slot) {
@@ -389,8 +385,17 @@ public class CosmeticUser {
 
     public void spawnBalloon(CosmeticBalloonType cosmeticBalloonType) {
         if (this.userBalloonManager != null) return;
-        this.userBalloonManager = NMSHandlers.getHandler().spawnBalloon(this, cosmeticBalloonType);
-        //updateCosmetic(cosmeticBalloonType);
+
+        org.bukkit.entity.Entity entity = getEntity();
+
+        UserBalloonManager userBalloonManager1 = new UserBalloonManager(this, entity.getLocation());
+        userBalloonManager1.getModelEntity().teleport(entity.getLocation().add(cosmeticBalloonType.getBalloonOffset()));
+
+        userBalloonManager1.spawnModel(cosmeticBalloonType, getCosmeticColor(cosmeticBalloonType.getSlot()));
+        userBalloonManager1.addPlayerToModel(this, cosmeticBalloonType, getCosmeticColor(cosmeticBalloonType.getSlot()));
+
+        this.userBalloonManager = userBalloonManager1;
+        //this.userBalloonManager = NMSHandlers.getHandler().spawnBalloon(this, cosmeticBalloonType);
     }
 
     public void despawnBalloon() {

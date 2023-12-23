@@ -29,6 +29,10 @@ import java.util.List;
 
 public class TypeCosmetic extends Type {
 
+    public TypeCosmetic(String id) {
+        super(id);
+    }
+
     public TypeCosmetic() {
         super("cosmetic");
     }
@@ -153,7 +157,7 @@ public class TypeCosmetic extends Type {
             return itemStack;
         }
 
-        if (!user.canEquipCosmetic(cosmetic) && !config.node("locked-item").virtual()) {
+        if (!user.canEquipCosmetic(cosmetic, true) && !config.node("locked-item").virtual()) {
             MessagesUtil.sendDebugMessages("GUI Locked Item");
             ConfigurationNode lockedItem = config.node("locked-item");
             try {
