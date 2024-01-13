@@ -6,8 +6,8 @@ import com.hibiscusmc.hmccolor.shaded.gui.guis.GuiItem;
 import com.hibiscusmc.hmccosmetics.HMCCosmeticsPlugin;
 import com.hibiscusmc.hmccosmetics.config.Settings;
 import com.hibiscusmc.hmccosmetics.cosmetic.Cosmetic;
-import com.hibiscusmc.hmccosmetics.hooks.Hooks;
 import com.hibiscusmc.hmccosmetics.user.CosmeticUser;
+import me.lojosho.hibiscuscommons.hooks.Hooks;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -31,7 +31,7 @@ public class DyeMenu {
         ItemStack originalItem = user.getUserCosmeticItem(cosmetic);
         if (originalItem == null || !cosmetic.isDyable()) return;
 
-        Gui gui = HMCColorApi.INSTANCE.colorMenu();
+        Gui gui = HMCColorApi.INSTANCE.colorMenu(player);
         gui.updateTitle(Hooks.processPlaceholders(player, Settings.getDyeMenuName()));
         gui.setItem(Settings.getDyeMenuInputSlot(), new GuiItem(originalItem));
         gui.setDefaultTopClickAction(event -> {
